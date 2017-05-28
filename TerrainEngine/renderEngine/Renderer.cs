@@ -84,7 +84,7 @@ namespace TerrainEngine.renderEngine
             SetProjectionMatrix(gl, terrain.ModelShader);
             SetViewMatrix(gl, terrain.ModelShader, camera);
 
-            RenderTerrain(gl, terrain);
+            RenderTerrain(gl, terrain, brush);
 
             for (int i = 0; i < entities.Count; i++)
             {
@@ -94,13 +94,13 @@ namespace TerrainEngine.renderEngine
                 RenderEntity(gl, entities[i]);
             }
 
-            if (brush != null)
-            {
-                SetProjectionMatrix(gl, brush.Object.Shader);
-                SetViewMatrix(gl, brush.Object.Shader, camera);
+            //if (brush != null)
+            //{
+            //    SetProjectionMatrix(gl, brush.Object.Shader);
+            //    SetViewMatrix(gl, brush.Object.Shader, camera);
 
-                RenderEntity(gl, brush.Object);
-            }
+            //    RenderEntity(gl, brush.Object);
+            //}
         }
 
         private void RenderEntity(OpenGL gl, Object3D entity)
@@ -110,6 +110,10 @@ namespace TerrainEngine.renderEngine
             gl.BindVertexArray(entity.Model.Id);
             gl.EnableVertexAttribArray(0);
             gl.EnableVertexAttribArray(1);
+
+            /**/
+
+            /**/
 
             mat4 transformationMatrix = MatrixMath.CreateTransformationMatrix(entity.Position,
                 entity.RotX, entity.RotY, entity.RotZ, entity.Scale);
@@ -143,7 +147,7 @@ namespace TerrainEngine.renderEngine
             entity.Shader.Stop(gl);
         }
 
-        private void RenderTerrain(OpenGL gl, Terrain entity)
+        private void RenderTerrain(OpenGL gl, Terrain entity, TerrainBrush brush)
         {
             entity.ModelShader.Start(gl);
 
@@ -151,6 +155,9 @@ namespace TerrainEngine.renderEngine
             gl.EnableVertexAttribArray(0);
             gl.EnableVertexAttribArray(1);
 
+            entity.ModelShader.LoadTerrainSize(gl, entity.TerrainSize);
+            entity.ModelShader.LoadBrushPosition(gl, brush.Object.Position.x, brush.Object.Position.y, brush.Object.Position.z);
+            entity.ModelShader.LoadBrushRadius(gl, brush.Radius);
             mat4 transformationMatrix = MatrixMath.CreateTransformationMatrix(new vec3(0, 0, 0), 0, 0, 0, 1);
             entity.ModelShader.LoadTransformationMatrix(gl, transformationMatrix);
 

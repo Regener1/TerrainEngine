@@ -70,6 +70,21 @@ namespace TerrainEngine.models
             _shaderProgram.SetUniformMatrix4(gl, "projectionMatrix", matrix.to_array());
         }
 
+        public void LoadBrushRadius(OpenGL gl, float radius)
+        {
+            _shaderProgram.SetUniform1(gl, "brushRadius", radius);
+        }
+
+        public void LoadTerrainSize(OpenGL gl, float size)
+        {
+            _shaderProgram.SetUniform1(gl, "terrainSize", size);
+        }
+
+        public void LoadBrushPosition(OpenGL gl, float x, float y, float z)
+        {
+            _shaderProgram.SetUniform3(gl, "brushPosition", x, y, z);
+        }
+
         private void CreateShaders(OpenGL gl)
         {
             AddAttributeLocation(0, "position");

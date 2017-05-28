@@ -26,7 +26,7 @@ namespace TerrainEngine.models
 
     public class Terrain
     {
-        private const float SIZE = 40f;
+        private float _terrainSize = 64f;
 
         private OpenGL _gl;
         private Loader _loader;
@@ -130,12 +130,20 @@ namespace TerrainEngine.models
 
         }
 
+        public float TerrainSize
+        {
+            get
+            {
+                return _terrainSize;
+            }
+        }
+
         public Terrain(OpenGL gl, Loader loader, float posX, float posZ, Image texture, string vertexShader, string fragmentShader)
         {
             this._gl = gl;
             this._loader = loader;
-            this._posX = posX * SIZE;
-            this._posZ = posZ * SIZE;
+            this._posX = posX * _terrainSize;
+            this._posZ = posZ * _terrainSize;
             this._textureImg = texture;
             this._vertShaderPath = vertexShader;
             this._fragShaderPath = fragmentShader;
@@ -160,9 +168,9 @@ namespace TerrainEngine.models
             {
                 for (int j = 0; j < (n + 1); j++)
                 {
-                    x = _posX + (float)j / (float)n * SIZE;
+                    x = _posX + (float)j / (float)n * _terrainSize;
                     y = 0;
-                    z = _posZ + (float)i / (float)n * SIZE;
+                    z = _posZ + (float)i / (float)n * _terrainSize;
                     _vertices[vertexPointer * 3] = x;
                     _vertices[vertexPointer * 3 + 1] = y;
                     _vertices[vertexPointer * 3 + 2] = z;
@@ -209,7 +217,7 @@ namespace TerrainEngine.models
         {
             float terrainX = worldX - this._posX;
             float terrainZ = worldZ - this._posZ;
-            float gridSquareSize = SIZE / ((float)_heightMap.GetLength(0) - 1);
+            float gridSquareSize = _terrainSize / ((float)_heightMap.GetLength(0) - 1);
             int gridX = (int)Math.Floor(terrainX / gridSquareSize);
             int gridZ = (int)Math.Floor(terrainZ / gridSquareSize);
 
@@ -244,7 +252,7 @@ namespace TerrainEngine.models
             
             float terrainX = worldX - this._posX;
             float terrainZ = worldZ - this._posZ;
-            float gridSquareSize = SIZE / ((float)_heightMap.GetLength(0) - 1);
+            float gridSquareSize = _terrainSize / ((float)_heightMap.GetLength(0) - 1);
  
             int beginGridX = (int)Math.Floor((terrainX - radius) / gridSquareSize);
             int endGridX = (int)Math.Floor((terrainX + radius) / gridSquareSize);
@@ -276,7 +284,7 @@ namespace TerrainEngine.models
             }
 
             UpdateVerticesHeight();
-            ReloadEntity();
+            ReloadEntityModel();
         }
 
         private void UpdateVerticesHeight()
@@ -292,7 +300,7 @@ namespace TerrainEngine.models
             }
         }
 
-        private void ReloadEntity()
+        private void ReloadEntityModel()
         {
             _loader.ReloadEntityVao(_gl, _model);
         }

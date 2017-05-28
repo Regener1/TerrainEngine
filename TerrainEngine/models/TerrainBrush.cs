@@ -58,6 +58,14 @@ namespace TerrainEngine.models
             }
         }
 
+        public float Radius
+        {
+            get
+            {
+                return _radius;
+            }
+        }
+
         public TerrainBrush(OpenGL gl, Terrain terrain, Loader loader, Image texture, string vertexShader, string fragmentShader)
         {
             this._gl = gl;

@@ -33,9 +33,9 @@ void main(void){
 	else{
 		circleColor = vec4(0.1f,0.1f,0.1f,1f);
 	}
-	if (circleColor.a < 0.5f){
-			discard;
-		}
+	//if (circleColor.a < 0.5f){
+		//	discard;
+		//}
 		out_Color = circleColor;
 	
 }

@@ -180,11 +180,11 @@ namespace TerrainEngine
                 
                 _brush.ChangeTerrainHeight(0.05f);
 
-                for (int i = 0; i < _picker.CurTerrainPoint.to_array().Length; i++)
-                {
-                    Console.Write(_picker.CurTerrainPoint.to_array()[i] + " ");
-                }
-                Console.WriteLine();
+                //for (int i = 0; i < _picker.CurTerrainPoint.to_array().Length; i++)
+                //{
+                //    Console.Write(_picker.CurTerrainPoint.to_array()[i] + " ");
+                //}
+                //Console.WriteLine();
             }
                 
 
