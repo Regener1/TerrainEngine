@@ -37,7 +37,6 @@ namespace TerrainEngine.tool
             if (IntersectionInRange(0, RAY_RANGE, _curRay))
             {
                 _curTerrainPoint = BinarySearch(0, 0, RAY_RANGE, _curRay);
-                //_curTerrainPoint = new vec3(_curTerrainPoint.x, _curTerrainPoint.y, _curTerrainPoint.z);
             }
             else
             {

@@ -79,7 +79,7 @@ namespace TerrainEngine.renderEngine
             gl.ClearColor(1, 1, 1, 1);
         }
 
-        public void Render(OpenGL gl, Terrain terrain, List<Object3D> entities, Object3D brush, Camera camera)
+        public void Render(OpenGL gl, Terrain terrain, List<Object3D> entities, TerrainBrush brush, Camera camera)
         {
             SetProjectionMatrix(gl, terrain.ModelShader);
             SetViewMatrix(gl, terrain.ModelShader, camera);
@@ -94,13 +94,13 @@ namespace TerrainEngine.renderEngine
                 RenderEntity(gl, entities[i]);
             }
 
-            //if (brush != null)
-            //{
-            //    SetProjectionMatrix(gl, brush.Shader);
-            //    SetViewMatrix(gl, brush.Shader, camera);
+            if (brush != null)
+            {
+                SetProjectionMatrix(gl, brush.Object.Shader);
+                SetViewMatrix(gl, brush.Object.Shader, camera);
 
-            //    RenderLines(gl, brush);
-            //}
+                RenderEntity(gl, brush.Object);
+            }
         }
 
         private void RenderEntity(OpenGL gl, Object3D entity)

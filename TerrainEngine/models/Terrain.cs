@@ -12,6 +12,18 @@ using TerrainEngine.tool;
 
 namespace TerrainEngine.models
 {
+    public class XZ
+    {
+        public XZ(float x, float z)
+        {
+            this.x = x;
+            this.z = z;
+        }
+        public float x;
+        public float z;
+
+    }
+
     public class Terrain
     {
         private const float SIZE = 40f;
@@ -36,6 +48,7 @@ namespace TerrainEngine.models
         private float _posZ;
 
         private float[,] _heightMap;
+        private XZ[,] _verticesMap;
 
         public float[] Vertices
         {
@@ -135,18 +148,26 @@ namespace TerrainEngine.models
             int count = (n + 1) * (n + 1);
             _vertices = new float[count * 3];
             _heightMap = new float[n + 1, n + 1];
+            _verticesMap = new XZ[n + 1, n + 1];
             _normals = new float[count * 3];
             _textureCoords = new float[count * 2];
             _indices = new uint[6 * n * n];
             int vertexPointer = 0;
+            float x = 0;
+            float z = 0;
+            float y = 0;
             for (int i = 0; i < (n + 1); i++)
             {
                 for (int j = 0; j < (n + 1); j++)
                 {
-                    _vertices[vertexPointer * 3] = _posX + (float)j / (float)n * SIZE;
-                    _vertices[vertexPointer * 3 + 1] = 0;
-                    _vertices[vertexPointer * 3 + 2] = _posZ + (float)i / (float)n * SIZE;
-                    _heightMap[i, j] = 0;
+                    x = _posX + (float)j / (float)n * SIZE;
+                    y = 0;
+                    z = _posZ + (float)i / (float)n * SIZE;
+                    _vertices[vertexPointer * 3] = x;
+                    _vertices[vertexPointer * 3 + 1] = y;
+                    _vertices[vertexPointer * 3 + 2] = z;
+                    _heightMap[i, j] = y;
+                    _verticesMap[i, j] = new XZ(x, z);
                     _normals[vertexPointer * 3] = 0;
                     _normals[vertexPointer * 3 + 1] = 1;
                     _normals[vertexPointer * 3 + 2] = 0;
@@ -192,6 +213,7 @@ namespace TerrainEngine.models
             int gridX = (int)Math.Floor(terrainX / gridSquareSize);
             int gridZ = (int)Math.Floor(terrainZ / gridSquareSize);
 
+
             if (gridX >= _heightMap.GetLength(0) - 1 || gridZ >= _heightMap.GetLength(0) - 1 || gridX < 0 || gridZ < 0)
             {
                 return -1;
@@ -215,6 +237,64 @@ namespace TerrainEngine.models
             }
 
             return answer;
+        }
+
+        public void ChangeTerrainHeight(float worldX, float worldZ, float radius, float amount)
+        {
+            
+            float terrainX = worldX - this._posX;
+            float terrainZ = worldZ - this._posZ;
+            float gridSquareSize = SIZE / ((float)_heightMap.GetLength(0) - 1);
+ 
+            int beginGridX = (int)Math.Floor((terrainX - radius) / gridSquareSize);
+            int endGridX = (int)Math.Floor((terrainX + radius) / gridSquareSize);
+
+            int beginGridZ = (int)Math.Floor((terrainZ - radius) / gridSquareSize);
+            int endGridZ = (int)Math.Floor((terrainZ + radius) / gridSquareSize);
+
+            if (beginGridX < 0 && beginGridZ < 0)
+            {
+                return;
+            }
+
+            if (beginGridX < 0 || endGridX >= _heightMap.GetLength(1) - 1 ||
+                beginGridZ < 0 || endGridZ >= _heightMap.GetLength(0) - 1)
+            {
+                return;
+            }
+
+            for (int i = beginGridZ; i <= endGridZ + 1; i++)
+            {
+                for (int j = beginGridX; j <= endGridX + 1; j++)
+                {
+                    if(MatrixMath.InCircle(terrainX, terrainZ, _verticesMap[i,j].x, _verticesMap[i, j].z, radius))
+                    {
+                        _heightMap[i, j] += amount;
+                    }
+                }
+                
+            }
+
+            UpdateVerticesHeight();
+            ReloadEntity();
+        }
+
+        private void UpdateVerticesHeight()
+        {
+            int count = 1;
+            for (int i = 0; i < _heightMap.GetLength(0); i++)
+            {
+                for (int j = 0; j < _heightMap.GetLength(1); j++)
+                {
+                    _vertices[count] = _heightMap[i, j];
+                    count += 3;
+                }
+            }
+        }
+
+        private void ReloadEntity()
+        {
+            _loader.ReloadEntityVao(_gl, _model);
         }
     }
 }

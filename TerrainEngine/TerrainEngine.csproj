@@ -73,7 +73,7 @@
     <Compile Include="FTerrainEngine.Designer.cs">
       <DependentUpon>FTerrainEngine.cs</DependentUpon>
     </Compile>
-    <Compile Include="models\Brush.cs" />
+    <Compile Include="models\TerrainBrush.cs" />
     <Compile Include="models\Model.cs" />
     <Compile Include="models\Object3D.cs" />
     <Compile Include="models\ModelShader.cs" />

@@ -46,5 +46,10 @@ namespace TerrainEngine.tool
         {
             return glm.perspectiveFov(fov, width, height, near, far);
         }
+
+        public static bool InCircle(float cx, float cz, float x, float z, float radius)
+        {
+            return (x - cx) * (x - cx) + (z - cz) * (z - cz) < radius * radius;
+        }
     }
 }
