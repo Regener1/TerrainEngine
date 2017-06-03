@@ -18,40 +18,73 @@ namespace TerrainEngine.renderEngine
         private List<uint> _vbos = new List<uint>();
         private List<uint> _textures = new List<uint>();
 
-        public Model LoadEntityToVao(OpenGL gl, float[] vertices, float[] textureCoords, uint[] indices)
+        public void ReloadTerrain(OpenGL gl, Terrain entity)
+        {
+            DeleteEntityModel(gl, entity.Model.VAOId, entity.Model.IndicesId, entity.Model.VerticesId,
+                        entity.Model.TextureCoordsId, entity.Model.NormalsId);
+
+            LoadEntityToVao(gl, entity.Model, entity.Model.Vertices, entity.Model.TextureCoords, 
+                                                entity.Model.Indices, entity.Model.Normals);
+        }
+
+        public ModelShader LoadEntityShader(OpenGL gl, string vertexShaderCode, string fragmentShaderCode)
+        {
+            return new ModelShader(gl, vertexShaderCode, fragmentShaderCode);
+        }
+
+        public TerrainShader LoadTerrainShader(OpenGL gl, string vertexShaderCode, string fragmentShaderCode)
+        {
+            return new TerrainShader(gl, vertexShaderCode, fragmentShaderCode);
+        }
+
+        public void LoadEntityToVao(OpenGL gl, Model model, float[] vertices, float[] textureCoords, uint[] indices,
+                                            float[] normals)
         {
             uint vaoId = BindVao(gl);
-            SetIndexBuffer(gl, indices);
-            SetVbo(gl, 0, 3, vertices);
-            SetVbo(gl, 1, 2, textureCoords);
+            uint indicesId = SetIndexBuffer(gl, indices);
+            uint verticesId = SetVbo(gl, 0, 3, vertices);
+            uint textureCoordsId = SetVbo(gl, 1, 2, textureCoords);
+            uint normalsId = SetVbo(gl, 2, 3, normals);
             UnbindVao(gl);
-            return new Model(vaoId, vertices, textureCoords, indices);
+
+            model.VAOId = vaoId;
+            model.IndicesId = indicesId;
+            model.VerticesId = verticesId;
+            model.TextureCoordsId = textureCoordsId;
+            model.NormalsId = normalsId;
+
+            model.Indices = indices;
+            model.Vertices = vertices;
+            model.TextureCoords = textureCoords;
+            model.Normals = normals;
         }
 
-        public Model LoadLineToVao(OpenGL gl, float[] vertices, uint[] indices)
+
+        public void DeleteEntityModel(OpenGL gl, uint vaoId, uint indicesId, uint verticesId, 
+                                uint textureCoordsId, uint normalsId)
         {
-            uint vaoId = BindVao(gl);
-            SetIndexBuffer(gl, indices);
-            SetVbo(gl, 0, 3, vertices);
-            UnbindVao(gl);
-            return new Model(vaoId, vertices, new float[1], indices);
+            DeleteVbo(gl, indicesId);
+            DeleteVbo(gl, verticesId);
+            DeleteVbo(gl, textureCoordsId);
+            DeleteVbo(gl, normalsId);
+            DeleteVao(gl, vaoId);
         }
 
-        public void ReloadEntityVao(OpenGL gl, Model model)
+        public void DeleteEntity(OpenGL gl, uint vaoId, uint indicesId, uint verticesId,
+                                uint textureCoordsId, uint normalsId, uint textureId)
         {
-            gl.BindVertexArray(model.Id);
-            SetIndexBuffer(gl, model.Indices);
-            SetVbo(gl, 0, 3, model.Vertices);
-            SetVbo(gl, 1, 2, model.TextureCoords);
-            gl.BindVertexArray(0);
+            DeleteVbo(gl, indicesId);
+            DeleteVbo(gl, verticesId);
+            DeleteVbo(gl, textureCoordsId);
+            DeleteVbo(gl, normalsId);
+            DeleteVao(gl, vaoId);
+            DeleteTexture(gl, textureId);
         }
-
-        public void ReloadLineVao(OpenGL gl, Model model)
+        
+        public void ReloadTerrainTexture(OpenGL gl, ModelTexture modelTexture, Image textureImg)
         {
-            gl.BindVertexArray(model.Id);
-            SetIndexBuffer(gl, model.Indices);
-            SetVbo(gl, 0, 3, model.Vertices);
-            gl.BindVertexArray(0);
+            DeleteTexture(gl, modelTexture.Id);
+            LoadTexture(gl, modelTexture, textureImg);
         }
 
         private uint BindVao(OpenGL gl)
@@ -68,7 +101,22 @@ namespace TerrainEngine.renderEngine
             gl.BindVertexArray(0);
         }
 
-        private void SetIndexBuffer(OpenGL gl, uint[] indices)
+        private void DeleteVbo(OpenGL gl, uint id)
+        {
+            gl.DeleteBuffers(1, new uint[] { id });
+        }
+
+        private void DeleteVao(OpenGL gl, uint id)
+        {
+            gl.DeleteVertexArrays(1, new uint[] { id });
+        }
+
+        private void DeleteTexture(OpenGL gl, uint id)
+        {
+            gl.DeleteTextures(1, new uint[] { id });
+        }
+
+        private uint SetIndexBuffer(OpenGL gl, uint[] indices)
         {
             uint[] ids = new uint[1];
             gl.GenBuffers(1, ids);
@@ -76,9 +124,11 @@ namespace TerrainEngine.renderEngine
             gl.BindBuffer(OpenGL.GL_ELEMENT_ARRAY_BUFFER, indexId);
             gl.BufferData(OpenGL.GL_ELEMENT_ARRAY_BUFFER, ToUShort(indices), OpenGL.GL_STATIC_DRAW);
             gl.BindBuffer(OpenGL.GL_ELEMENT_ARRAY_BUFFER, 0);
+
+            return indexId;
         }
 
-        private void SetVbo(OpenGL gl, uint attributeIndex, int stride, float[] data)
+        private uint SetVbo(OpenGL gl, uint attributeIndex, int stride, float[] data)
         {
             uint[] ids = new uint[1];
             gl.GenBuffers(1, ids);
@@ -88,9 +138,11 @@ namespace TerrainEngine.renderEngine
             gl.VertexAttribPointer(attributeIndex, stride, OpenGL.GL_FLOAT, false, 0, IntPtr.Zero);
             gl.EnableVertexAttribArray(attributeIndex);
             gl.BindBuffer(OpenGL.GL_ARRAY_BUFFER, 0);
+
+            return vboId;
         }
 
-        public ModelTexture LoadTexture(OpenGL gl, Image textureImg)
+        public void LoadTexture(OpenGL gl, ModelTexture modelTexture, Image textureImg)
         {
             uint[] ids = new uint[1];
             gl.GenTextures(1, ids);
@@ -110,15 +162,24 @@ namespace TerrainEngine.renderEngine
                 bmpData.Scan0);
             bitmap.UnlockBits(bmpData);
 
+            bitmap.Dispose();
 
             gl.BindTexture(OpenGL.GL_TEXTURE_2D, 0);
-            return new ModelTexture(textureId);
+
+            modelTexture.Id = textureId;
+            modelTexture.Image = textureImg;
 
         }
 
-        public Object3D CreateObject3D(Model model, ModelTexture texture, ModelShader shader, int id, vec3 position, float rotX, float rotY, float rotZ, float scale)
+        public void LoadTerrainTexturePack(OpenGL gl, TerrainTexturePack terrainTexturePack, Image blendMap,
+                Image backgroundTexture, Image rTexture, Image gTexture, Image bTexture)
         {
-            return new Object3D(model, texture, shader, id, position, rotX, rotY, rotZ, scale);
+            
+            LoadTexture(gl, terrainTexturePack.BackgroundTexture, backgroundTexture);
+            LoadTexture(gl, terrainTexturePack.RTexture, rTexture);
+            LoadTexture(gl, terrainTexturePack.GTexture, gTexture);
+            LoadTexture(gl, terrainTexturePack.BTexture, bTexture);
+            LoadTexture(gl, terrainTexturePack.BlendMap, blendMap);
         }
 
         private ushort[] ToUShort(uint[] arr)

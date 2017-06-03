@@ -21,4 +21,6 @@ C:\Users\Regener\documents\visual studio 2015\Projects\TerrainEngine\TerrainEngi
 C:\Users\Regener\documents\visual studio 2015\Projects\TerrainEngine\TerrainEngine\bin\Debug\SharpGL.WinForms.xml
 C:\Users\Regener\documents\visual studio 2015\Projects\TerrainEngine\TerrainEngine\obj\Debug\TerrainEngine.exe
 C:\Users\Regener\documents\visual studio 2015\Projects\TerrainEngine\TerrainEngine\obj\Debug\TerrainEngine.pdb
+C:\Users\Regener\documents\visual studio 2015\Projects\TerrainEngine\TerrainEngine\obj\Debug\TerrainEngine.Resources.Shaders.resources
+C:\Users\Regener\documents\visual studio 2015\Projects\TerrainEngine\TerrainEngine\obj\Debug\TerrainEngine.Resources.Textures.resources
 C:\Users\Regener\documents\visual studio 2015\Projects\TerrainEngine\TerrainEngine\obj\Debug\TerrainEngine.csprojResolveAssemblyReference.cache

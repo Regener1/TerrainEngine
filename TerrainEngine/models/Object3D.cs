@@ -1,21 +1,34 @@
 ﻿using GlmNet;
+using SharpGL;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TerrainEngine.entities;
+using TerrainEngine.renderEngine;
 
 namespace TerrainEngine.models
 {
     public class Object3D
     {
-        private Model _model;
-        private ModelTexture _texture;
-        private ModelShader _shader;
-        private int _id;
-        private vec3 _position;
-        private float _rotX, _rotY, _rotZ;
-        private float _scale;
+        protected OpenGL _gl;
+        protected Loader _loader;
+
+        protected Model _model;
+        protected ModelTexture _texture;
+        protected ModelShader _shader;
+        protected Light _light;
+
+        protected Image _textureImg;
+        protected string _vertShaderCode;
+        protected string _fragShaderCode;
+
+        protected int _id;
+        protected vec3 _position;
+        protected float _rotX, _rotY, _rotZ;
+        protected float _scale;
 
         public int Id
         {
@@ -134,15 +147,31 @@ namespace TerrainEngine.models
             }
         }
 
-        public Object3D(Model model, ModelTexture texture, ModelShader shader, int id, vec3 position, float rotX, float rotY, float rotZ, float scale)
+        public Light Light
         {
-            this._model = model;
-            this._texture = texture;
-            this._shader = shader;
+            get
+            {
+                return _light;
+            }
+
+            set
+            {
+                _light = value;
+            }
+        }
+
+        public Object3D(OpenGL gl, Loader loader, Light light,
+                        Image textureImg, string vertShaderCode, string fragShaderCode,
+                        int id, vec3 position, 
+                        float rotX, float rotY, float rotZ, float scale)
+        {
+            this._gl = gl;
+            this._loader = loader;
+            this._light = light;
+            this._textureImg = textureImg;
+            this._vertShaderCode = vertShaderCode;
+            this._fragShaderCode = fragShaderCode;
             this._id = id;
-            this._model = model;
-            this._texture = texture;
-            this._shader = shader;
             this._position = position;
             this._rotX = rotX;
             this._rotY = rotY;
@@ -150,11 +179,5 @@ namespace TerrainEngine.models
             this._scale = scale;
         }
 
-        public string GetInfo()
-        {
-            return "x " + _position.x +
-                "y " + _position.y +
-                "z " + _position.z; 
-        }
     }
 }

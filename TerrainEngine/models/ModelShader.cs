@@ -1,43 +1,47 @@
 ﻿using GlmNet;
 using SharpGL;
-using SharpGL.Shaders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TerrainEngine.entities;
+using TerrainEngine.shaders;
 using TerrainEngine.tool;
 
 namespace TerrainEngine.models
 {
     public class ModelShader
     {
-        private string _vertexShaderPath = "";
-        private string _fragmentShaderPath = "";
-        private Dictionary<uint, string> _attributeLocation = new Dictionary<uint, string>();
-        private ShaderProgram _shaderProgram = new ShaderProgram();
+        /*
+         * СДЕЛАТЬ НАСЛЕДОВАНИЕ     ШЕЙДЕР ОБЪЕКТА/ ШЕЙДЕР ТЕРРИТОРИИ/ ШЕЙДЕР ЧЕГОНИБУДЬ ЕЩЁ 
+         */
+        protected string _vertexShaderCode = "";
+        protected string _fragmentShaderCode = "";
+        protected Dictionary<uint, string> _attributeLocation = new Dictionary<uint, string>();
+        protected ShaderProgram _shaderProgram = new ShaderProgram();
 
-        private int _locationTransformationMatrix;
-        private int _locationProjectionMatrix;
-        private int _locationViewMatrix;
+        protected int _locationTransformationMatrix;
+        protected int _locationProjectionMatrix;
+        protected int _locationViewMatrix;
 
-        public ModelShader(OpenGL gl, string vertexShaderPath, string fragmentShaderPath)
+        public ModelShader(OpenGL gl, string vertexShaderCode, string fragmentShaderCode)
         {
-            this._vertexShaderPath = vertexShaderPath;
-            this._fragmentShaderPath = fragmentShaderPath;
+            this._vertexShaderCode = vertexShaderCode;
+            this._fragmentShaderCode = fragmentShaderCode;
             CreateShaders(gl);
         }
 
-        public string VertexShaderPath
+        public string VertexShaderCode
         {
-            get { return _vertexShaderPath; }
-            set { _vertexShaderPath = value; }
+            get { return _vertexShaderCode; }
+            set { _vertexShaderCode = value; }
         }
 
-        public string FragmentShaderPath
+        public string FragmentShaderCode
         {
-            get { return _fragmentShaderPath; }
-            set { _fragmentShaderPath = value; }
+            get { return _fragmentShaderCode; }
+            set { _fragmentShaderCode = value; }
         }
 
         public void Start(OpenGL gl)
@@ -70,43 +74,21 @@ namespace TerrainEngine.models
             _shaderProgram.SetUniformMatrix4(gl, "projectionMatrix", matrix.to_array());
         }
 
-        public void LoadBrushRadius(OpenGL gl, float radius)
+        public void LoadLight(OpenGL gl, Light light)
         {
-            _shaderProgram.SetUniform1(gl, "brushRadius", radius);
-        }
-
-        public void LoadTerrainSize(OpenGL gl, float size)
-        {
-            _shaderProgram.SetUniform1(gl, "terrainSize", size);
-        }
-
-        public void LoadBrushPosition(OpenGL gl, float x, float y, float z)
-        {
-            _shaderProgram.SetUniform3(gl, "brushPosition", x, y, z);
+            _shaderProgram.SetUniform3(gl, "lightPosition", light.Position.x, light.Position.y, light.Position.z);
+            _shaderProgram.SetUniform3(gl, "lightColor", light.Color.x, light.Color.y, light.Color.z);
         }
 
         private void CreateShaders(OpenGL gl)
         {
             AddAttributeLocation(0, "position");
             AddAttributeLocation(1, "textureCoordinates");
-
-            string vertexShaderCode = "";
-            string fragmentShaderCode = "";
+            AddAttributeLocation(2, "normal");
 
             try
             {
-                vertexShaderCode = ManifestResourceLoader.LoadShaderCode(_vertexShaderPath);
-                fragmentShaderCode = ManifestResourceLoader.LoadShaderCode(_fragmentShaderPath);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
-            }
-
-            try
-            {
-                _shaderProgram.Create(gl, vertexShaderCode, fragmentShaderCode,
+                _shaderProgram.Create(gl, _vertexShaderCode, _fragmentShaderCode,
                     _attributeLocation);
             }
             catch (Exception e)
@@ -120,20 +102,20 @@ namespace TerrainEngine.models
         }
 
         //not used
-        private void GetAllUniformLocations(OpenGL gl)
-        {
-            _locationTransformationMatrix = _shaderProgram.
-                GetUniformLocation(gl, "transformationMatrix");
-            _locationProjectionMatrix = _shaderProgram.
-                GetUniformLocation(gl, "projectionMatrix");
-            _locationViewMatrix = _shaderProgram.
-                GetUniformLocation(gl, "viewMatrix");
-        }
+        //private void GetAllUniformLocations(OpenGL gl)
+        //{
+        //    _locationTransformationMatrix = _shaderProgram.
+        //        GetUniformLocation(gl, "transformationMatrix");
+        //    _locationProjectionMatrix = _shaderProgram.
+        //        GetUniformLocation(gl, "projectionMatrix");
+        //    _locationViewMatrix = _shaderProgram.
+        //        GetUniformLocation(gl, "viewMatrix");
+        //}
 
-        private int GetUniformLocation(OpenGL gl, string uniformName)
-        {
-            return gl.GetUniformLocation(_shaderProgram.ShaderProgramObject, uniformName);
-        }
+        //private int GetUniformLocation(OpenGL gl, string uniformName)
+        //{
+        //    return gl.GetUniformLocation(_shaderProgram.ShaderProgramObject, uniformName);
+        //}
 
         private void AddAttributeLocation(uint key, string value)
         {

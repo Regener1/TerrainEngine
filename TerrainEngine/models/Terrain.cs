@@ -6,38 +6,33 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TerrainEngine.entities;
 using TerrainEngine.renderEngine;
-using TerrainEngine.settings;
 using TerrainEngine.tool;
 
 namespace TerrainEngine.models
 {
-    public class XZ
-    {
-        public XZ(float x, float z)
-        {
-            this.x = x;
-            this.z = z;
-        }
-        public float x;
-        public float z;
-
-    }
-
     public class Terrain
     {
-        private float _terrainSize = 64f;
+        private int _id;
 
         private OpenGL _gl;
         private Loader _loader;
 
         private Model _model;
-        private ModelTexture _modelTexture;
-        private ModelShader _modelShader;
+        private TerrainTexturePack _terrainTextures;
+        private ModelShader _shader;
+        private Light _light;
 
-        private Image _textureImg;
-        private string _vertShaderPath;
-        private string _fragShaderPath;
+        private Image _blendMap;
+        private Image _backgroundTexture;
+        private Image _rTexture;
+        private Image _gTexture;
+        private Image _bTexture;
+        private string _vertShaderCode;
+        private string _fragShaderCode;
+
+        private float _terrainSize = 64f;
 
         private float[] _vertices;
         private float[] _textureCoords;
@@ -47,8 +42,28 @@ namespace TerrainEngine.models
         private float _posX;
         private float _posZ;
 
-        private float[,] _heightMap;
-        private XZ[,] _verticesMap;
+        private vec3[,] _verticesMap;
+        private vec3[,] _normalsMap;
+
+        public Terrain(OpenGL gl, Loader loader, Light light,
+                        Image blendMap, Image backgroundTexture, Image rTexture, Image gTexture, Image bTexture,
+                        string vertShaderCode, string fragShaderCode,
+                        int id, float posX, float posZ) 
+        {
+            this._gl = gl;
+            this._loader = loader;
+            this._light = light;
+            this._blendMap = blendMap;
+            this._backgroundTexture = backgroundTexture;
+            this._rTexture = rTexture;
+            this._gTexture = gTexture;
+            this._bTexture = bTexture;
+            this._vertShaderCode = vertShaderCode;
+            this._fragShaderCode = fragShaderCode;
+            this._id = id;
+            this._posX = posX * _terrainSize;
+            this._posZ = posZ * _terrainSize;
+        }
 
         public float[] Vertices
         {
@@ -104,32 +119,6 @@ namespace TerrainEngine.models
             }
         }
 
-        public Model Model
-        {
-            get
-            {
-                return _model;
-            }
-        }
-
-        public ModelTexture ModelTexture
-        {
-            get
-            {
-                return _modelTexture;
-            }
-
-        }
-
-        public ModelShader ModelShader
-        {
-            get
-            {
-                return _modelShader;
-            }
-
-        }
-
         public float TerrainSize
         {
             get
@@ -138,25 +127,64 @@ namespace TerrainEngine.models
             }
         }
 
-        public Terrain(OpenGL gl, Loader loader, float posX, float posZ, Image texture, string vertexShader, string fragmentShader)
+        public Model Model
         {
-            this._gl = gl;
-            this._loader = loader;
-            this._posX = posX * _terrainSize;
-            this._posZ = posZ * _terrainSize;
-            this._textureImg = texture;
-            this._vertShaderPath = vertexShader;
-            this._fragShaderPath = fragmentShader;
+            get
+            {
+                return _model;
+            }
 
+            set
+            {
+                _model = value;
+            }
+        }
 
+        public ModelShader Shader
+        {
+            get
+            {
+                return _shader;
+            }
+
+            set
+            {
+                _shader = value;
+            }
+        }
+
+        public Light Light
+        {
+            get
+            {
+                return _light;
+            }
+
+            set
+            {
+                _light = value;
+            }
+        }
+
+        public TerrainTexturePack TerrainTextures
+        {
+            get
+            {
+                return _terrainTextures;
+            }
+
+            set
+            {
+                _terrainTextures = value;
+            }
         }
 
         public void CreateTerrain(int n)
         {
             int count = (n + 1) * (n + 1);
             _vertices = new float[count * 3];
-            _heightMap = new float[n + 1, n + 1];
-            _verticesMap = new XZ[n + 1, n + 1];
+            _verticesMap = new vec3[n + 1, n + 1];
+            _normalsMap = new vec3[n + 1, n + 1];
             _normals = new float[count * 3];
             _textureCoords = new float[count * 2];
             _indices = new uint[6 * n * n];
@@ -174,8 +202,8 @@ namespace TerrainEngine.models
                     _vertices[vertexPointer * 3] = x;
                     _vertices[vertexPointer * 3 + 1] = y;
                     _vertices[vertexPointer * 3 + 2] = z;
-                    _heightMap[i, j] = y;
-                    _verticesMap[i, j] = new XZ(x, z);
+                    _verticesMap[i, j] = new vec3(x, y, z);
+                    _normalsMap[i, j] = new vec3(0, 1, 0);
                     _normals[vertexPointer * 3] = 0;
                     _normals[vertexPointer * 3 + 1] = 1;
                     _normals[vertexPointer * 3 + 2] = 0;
@@ -202,27 +230,44 @@ namespace TerrainEngine.models
                 }
             }
 
-            _model = _loader.LoadEntityToVao(_gl, _vertices, _textureCoords, _indices);
-            _modelTexture = _loader.LoadTexture(_gl, _textureImg);
-            _modelShader = new ModelShader(_gl, _vertShaderPath, _fragShaderPath);
-
+            _model = new Model();
+            _loader.LoadEntityToVao(_gl, _model, _vertices, _textureCoords, _indices, _normals);
+            _terrainTextures = new TerrainTexturePack();
+            _loader.LoadTerrainTexturePack(_gl, _terrainTextures, _blendMap, _backgroundTexture, 
+                                        _rTexture, _gTexture, _bTexture);
+            _shader = _loader.LoadTerrainShader(_gl, _vertShaderCode, _fragShaderCode);
         }
 
-        public void Update()
+        private vec3 GetNormal(vec3 a, vec3 b, vec3 c)
         {
-            _loader.ReloadEntityVao(_gl, _model);
+            vec3 vec1 = b - a;
+            vec3 vec2 = c - a;
+            vec3 normal = MultVector(vec1, vec2) * -1;
+            return glm.normalize(normal);
+        }
+
+        private vec3 MultVector(vec3 a, vec3 b)
+        {
+            return new vec3(a.y * b.z - a.z * b.y,
+                            a.z * b.x - a.x * b.z,
+                            a.x * b.y - a.y * b.x);
+        }
+
+        private vec3 GetAverageVector(vec3 v1, vec3 v2)
+        {
+            return glm.normalize(v1 + v2);
         }
 
         public float GetHeightOfTerrain(float worldX, float worldZ)
         {
             float terrainX = worldX - this._posX;
             float terrainZ = worldZ - this._posZ;
-            float gridSquareSize = _terrainSize / ((float)_heightMap.GetLength(0) - 1);
+            float gridSquareSize = _terrainSize / ((float)_verticesMap.GetLength(0) - 1);
             int gridX = (int)Math.Floor(terrainX / gridSquareSize);
             int gridZ = (int)Math.Floor(terrainZ / gridSquareSize);
 
 
-            if (gridX >= _heightMap.GetLength(0) - 1 || gridZ >= _heightMap.GetLength(0) - 1 || gridX < 0 || gridZ < 0)
+            if (gridX >= _verticesMap.GetLength(0) - 1 || gridZ >= _verticesMap.GetLength(0) - 1 || gridX < 0 || gridZ < 0)
             {
                 return -1;
             }
@@ -233,15 +278,15 @@ namespace TerrainEngine.models
 
             if (xCoord <= (1 - zCoord))
             {
-                answer = MatrixMath.barryCentric(new vec3(0, _heightMap[gridX, gridZ], 0), new vec3(1,
-                                _heightMap[gridX + 1, gridZ], 0), new vec3(0,
-                                _heightMap[gridX, gridZ + 1], 1), new vec2(xCoord, zCoord));
+                answer = MatrixMath.barryCentric(new vec3(0, _verticesMap[gridX, gridZ].y, 0), new vec3(1,
+                                _verticesMap[gridX + 1, gridZ].y, 0), new vec3(0,
+                                _verticesMap[gridX, gridZ + 1].y, 1), new vec2(xCoord, zCoord));
             }
             else
             {
-                answer = MatrixMath.barryCentric(new vec3(1, _heightMap[gridX + 1, gridZ], 0), new vec3(1,
-                                _heightMap[gridX + 1, gridZ + 1], 1), new vec3(0,
-                                _heightMap[gridX, gridZ + 1], 1), new vec2(xCoord, zCoord));
+                answer = MatrixMath.barryCentric(new vec3(1, _verticesMap[gridX + 1, gridZ].y, 0), new vec3(1,
+                                _verticesMap[gridX + 1, gridZ + 1].y, 1), new vec3(0,
+                                _verticesMap[gridX, gridZ + 1].y, 1), new vec2(xCoord, zCoord));
             }
 
             return answer;
@@ -249,11 +294,11 @@ namespace TerrainEngine.models
 
         public void ChangeTerrainHeight(float worldX, float worldZ, float radius, float amount)
         {
-            
+
             float terrainX = worldX - this._posX;
             float terrainZ = worldZ - this._posZ;
-            float gridSquareSize = _terrainSize / ((float)_heightMap.GetLength(0) - 1);
- 
+            float gridSquareSize = _terrainSize / ((float)_verticesMap.GetLength(0) - 1);
+
             int beginGridX = (int)Math.Floor((terrainX - radius) / gridSquareSize);
             int endGridX = (int)Math.Floor((terrainX + radius) / gridSquareSize);
 
@@ -265,44 +310,71 @@ namespace TerrainEngine.models
                 return;
             }
 
-            if (beginGridX < 0 || endGridX >= _heightMap.GetLength(1) - 1 ||
-                beginGridZ < 0 || endGridZ >= _heightMap.GetLength(0) - 1)
+            if (beginGridX < 0 || endGridX >= _verticesMap.GetLength(1) - 1 ||
+                beginGridZ < 0 || endGridZ >= _verticesMap.GetLength(0) - 1)
             {
                 return;
             }
 
+            int curIndex;
             for (int i = beginGridZ; i <= endGridZ + 1; i++)
             {
                 for (int j = beginGridX; j <= endGridX + 1; j++)
                 {
-                    if(MatrixMath.InCircle(terrainX, terrainZ, _verticesMap[i,j].x, _verticesMap[i, j].z, radius))
+                    if (MatrixMath.InCircle(terrainX, terrainZ, _verticesMap[i, j].x, _verticesMap[i, j].z, radius))
                     {
-                        _heightMap[i, j] += amount;
+                        curIndex = (_verticesMap.GetLength(0) * i + j) * 3;
+                        _verticesMap[i, j].y += amount;
+                        _vertices[curIndex + 1] = _verticesMap[i, j].y;
+
+                        _normalsMap[i, j] = GetAverageVector(_normalsMap[i, j],
+                            GetNormal(_verticesMap[i, j], _verticesMap[i, j + 1], _verticesMap[i + 1, j]));
+
+                        _normals[curIndex] = _normalsMap[i, j].x;
+                        _normals[curIndex + 1] = _normalsMap[i, j].y;
+                        _normals[curIndex + 2] = _normalsMap[i, j].z;
+
+                        _normals[curIndex + 3] = _normalsMap[i, j].x;
+                        _normals[curIndex + 4] = _normalsMap[i, j].y;
+                        _normals[curIndex + 5] = _normalsMap[i, j].z;
+
+                        _normals[(_verticesMap.GetLength(0) * (i + 1) + j) * 3] = _normalsMap[i, j].x;
+                        _normals[(_verticesMap.GetLength(0) * (i + 1) + j) * 3 + 1] = _normalsMap[i, j].y;
+                        _normals[(_verticesMap.GetLength(0) * (i + 1) + j) * 3 + 2] = _normalsMap[i, j].z;
                     }
                 }
-                
+
             }
 
-            UpdateVerticesHeight();
-            ReloadEntityModel();
+            ReloadTerrain();
         }
 
-        private void UpdateVerticesHeight()
+        public void ChangeBlendMap(float worldX, float worldZ, float radius)
         {
-            int count = 1;
-            for (int i = 0; i < _heightMap.GetLength(0); i++)
+            float terrainX = worldX - this._posX;
+            float terrainZ = worldZ - this._posZ;
+
+            float texturePosX = (_terrainTextures.BlendMap.Image.Height / _terrainSize) * terrainX;
+            float texturePosZ = (_terrainTextures.BlendMap.Image.Width / _terrainSize) * terrainZ;
+
+            radius = (_terrainTextures.BlendMap.Image.Height / _terrainSize) * radius;
+            using (Graphics g = Graphics.FromImage(_terrainTextures.BlendMap.Image))
             {
-                for (int j = 0; j < _heightMap.GetLength(1); j++)
-                {
-                    _vertices[count] = _heightMap[i, j];
-                    count += 3;
-                }
+                g.FillEllipse(Brushes.Green, new RectangleF(texturePosX - radius, texturePosZ - radius, radius * 2, radius * 2));
             }
+            
+
+            ReloadBlendMap(_terrainTextures.BlendMap.Image);
         }
 
-        private void ReloadEntityModel()
+        public void ReloadTerrain()
         {
-            _loader.ReloadEntityVao(_gl, _model);
+            _loader.ReloadTerrain(_gl, this);
+        }
+
+        public void ReloadBlendMap(Image blendMap)
+        {
+            _loader.ReloadTerrainTexture(_gl, _terrainTextures.BlendMap, blendMap);
         }
     }
 }

@@ -14,7 +14,7 @@ using TerrainEngine.entities;
 using TerrainEngine.models;
 using TerrainEngine.renderEngine;
 using TerrainEngine.tool;
-using TerrainEngine.settings;
+
 
 namespace TerrainEngine
 {
@@ -25,6 +25,7 @@ namespace TerrainEngine
 
         private OpenGL _gl;
         private Loader _loader;
+        private Light _baseLight;
         private Renderer _renderer;
         private Camera _camera;
         private TerrainBrush _brush;
@@ -32,11 +33,25 @@ namespace TerrainEngine
         private List<Object3D> _objects3D = new List<Object3D>();
         private Terrain _terrain;
         private float _brushRadius = 1.0f;
-        private int _idObjectCounter = 0;
 
         public FTerrainEngine()
         {
             InitializeComponent();
+        }
+
+        private void ShowCamPosition()
+        {
+            stLblCamPosX.Text = _camera.Position.x.ToString();
+            stLblCamPosY.Text = _camera.Position.y.ToString();
+            stLblCamPosZ.Text = _camera.Position.z.ToString();
+        }
+
+        private void UpdateBrush(MouseEventArgs e)
+        {
+            _picker.Update((float)e.X, (float)e.Y, glControl.Width, glControl.Height);
+            vec3 position = _picker.CurTerrainPoint;
+            position.y += 0.1f;
+            _brush.Update(position, _brushRadius);
         }
 
         private void glControl_OpenGLDraw(object sender, RenderEventArgs args)
@@ -53,16 +68,20 @@ namespace TerrainEngine
             _loader = new Loader();
             _renderer = new Renderer(45f, 0.1f, 1000f, glControl.Width, glControl.Height);
             _camera = new Camera();
+            _baseLight = new Light(new vec3(0, 50, 0), new vec3(1, 1, 1));
             
 
-            _terrain = new Terrain(_gl, _loader, 0, 0, LoadTextureImage("rock.bmp"),
-                                        Resouce.SHADERS_PATH + Resouce.VERTEX_SHADER_TERRAIN,
-                                        Resouce.SHADERS_PATH + Resouce.FRAGMENT_SHADER_TERRAIN);
-            _terrain.CreateTerrain(64);
+            _terrain = new Terrain(_gl, _loader, _baseLight, Resources.Textures.blendMap,
+                                        Resources.Textures.ground, Resources.Textures.dark_stones, 
+                                        Resources.Textures.grass, Resources.Textures.stone_wall,
+                                        Resources.Shaders.terrainVertexShader,
+                                        Resources.Shaders.terrainFragmentShader,
+                                        1, 0, 0);
+            _terrain.CreateTerrain(200);
 
 
             _picker = new MousePicker(_terrain, _camera, _renderer.ProjectionMatrix);
-            _brush = new TerrainBrush(_gl, _terrain, _loader, LoadTextureImage("brush.png"), "terrainBrush.vert", "terrainBrush.frag");
+            _brush = new TerrainBrush(_terrain);
 
             AddObject3D();
         }
@@ -170,15 +189,15 @@ namespace TerrainEngine
                     }
                     _oldPosition = e.Location;
                 }
+
+                ShowCamPosition();
             }
-
-
-            
 
             if (e.Button == MouseButtons.Left)
             {
+                _brush.ChangeTerrainBlendMap();
                 
-                _brush.ChangeTerrainHeight(0.05f);
+                //_brush.ChangeTerrainHeight(0.05f);
 
                 //for (int i = 0; i < _picker.CurTerrainPoint.to_array().Length; i++)
                 //{
@@ -220,6 +239,8 @@ namespace TerrainEngine
             {
                 _camera.MoveRight();
             }
+
+            ShowCamPosition();
         }
 
         private void glControl_MouseWheel(object sender, MouseEventArgs e)
@@ -234,23 +255,7 @@ namespace TerrainEngine
             
         }
 
-        private void numericUpDown2_ValueChanged(object sender, EventArgs e)
-        {
-            
-        }
-
-        private void numericUpDown1_ValueChanged(object sender, EventArgs e)
-        {
-            
-        }
-
-        private void UpdateBrush(MouseEventArgs e)
-        {
-            _picker.Update((float)e.X, (float)e.Y, glControl.Width, glControl.Height);
-            vec3 position = _picker.CurTerrainPoint;
-            position.y += 0.1f;
-            _brush.Update(position, _brushRadius);
-        }
+        
 
         private void trackBarBrushSize_Scroll(object sender, EventArgs e)
         {
