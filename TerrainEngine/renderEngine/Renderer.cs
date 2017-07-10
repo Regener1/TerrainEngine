@@ -6,13 +6,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TerrainEngine.entities;
-using TerrainEngine.models;
+using TerrainEngine.shaders.objects;
 using TerrainEngine.tool;
 
 namespace TerrainEngine.renderEngine
 {
+
     public class Renderer
     {
+        private uint _renderType = OpenGL.GL_TRIANGLES;
+
         private float _fov = 45;
         private float _near = 0.1f;
         private float _far = 1000;
@@ -30,8 +33,6 @@ namespace TerrainEngine.renderEngine
         public Renderer(float fov, float near, float far, int width, int height)
         {
             SetViewProperties(fov, near, far, width, height);
-            _projectionMatrix = MatrixMath.CreateProjectionMatrix(_fov, width, height,
-                                                                    _near, _far);
         }
 
         public void SetViewProperties(float fov, float near, float far, int width, int height)
@@ -39,6 +40,8 @@ namespace TerrainEngine.renderEngine
             this._fov = fov;
             this._near = near;
             this._far = far;
+            this._projectionMatrix = TerrainEngineMath.CreateProjectionMatrix(_fov, width, height,
+                                                                    _near, _far);
         }
 
         public void Prepare(OpenGL gl)
@@ -48,98 +51,93 @@ namespace TerrainEngine.renderEngine
             gl.ClearColor(1, 1, 1, 1);
         }
 
-        public void Render(OpenGL gl, Terrain terrain, List<Object3D> entities, TerrainBrush brush, Camera camera)
+        public void Render(OpenGL gl, Terrain terrain, List<Model> models, TerrainBrush brush, Camera camera)
         {
             SetProjectionMatrix(gl, terrain.Shader);
             SetViewMatrix(gl, terrain.Shader, camera);
 
             RenderTerrain(gl, terrain, brush);
 
-            for (int i = 0; i < entities.Count; i++)
+            for (int i = 0; i < models.Count; i++)
             {
-                SetProjectionMatrix(gl, entities[i].Shader);
-                SetViewMatrix(gl, entities[i].Shader, camera);
+                SetProjectionMatrix(gl, models[i].Shader);
+                SetViewMatrix(gl, models[i].Shader, camera);
 
-                RenderEntity(gl, entities[i]);
+                RenderModel(gl, models[i]);
             }
         }
 
-        private void RenderEntity(OpenGL gl, Object3D entity)
+        private void RenderModel(OpenGL gl, Model model)
         {
-            entity.Shader.Start(gl);
+            model.StartShader();
 
-            gl.BindVertexArray(entity.Model.VAOId);
+            gl.BindVertexArray(model.Id);
             gl.EnableVertexAttribArray(0);
             gl.EnableVertexAttribArray(1);
 
-            mat4 transformationMatrix = MatrixMath.CreateTransformationMatrix(entity.Position,
-                entity.RotX, entity.RotY, entity.RotZ, entity.Scale);
-            entity.Shader.LoadTransformationMatrix(gl, transformationMatrix);
+            mat4 transformationMatrix = TerrainEngineMath.CreateTransformationMatrix(model.Position, model.Rotate, model.Scale);
+            model.SetTransformationMatrix(transformationMatrix);
 
             gl.ActiveTexture(OpenGL.GL_TEXTURE0);
-            gl.BindTexture(OpenGL.GL_TEXTURE_2D, entity.Texture.Id);
-            gl.DrawElements(OpenGL.GL_TRIANGLES, entity.Model.Indices.Length, entity.Model.Indices);
+            gl.BindTexture(OpenGL.GL_TEXTURE_2D, model.Texture.Id);
+            gl.DrawElements(_renderType, model.Indices.Length, model.Indices);
             gl.DisableVertexAttribArray(0);
             gl.DisableVertexAttribArray(1);
             gl.BindVertexArray(0);
 
-            entity.Shader.Stop(gl);
+            model.StopShader();
         }
 
-        private void RenderTerrain(OpenGL gl, Terrain entity, TerrainBrush brush)
+        private void RenderTerrain(OpenGL gl, Terrain terrain, TerrainBrush brush)
         {
-            entity.Shader.Start(gl);
+            terrain.StartShader();
 
-            gl.BindVertexArray(entity.Model.VAOId);
+            gl.BindVertexArray(terrain.Id);
             gl.EnableVertexAttribArray(0);
             gl.EnableVertexAttribArray(1);
             gl.EnableVertexAttribArray(2);
 
-            (entity.Shader as TerrainShader).LoadTerrainSize(gl, entity.TerrainSize);
-            (entity.Shader as TerrainShader).LoadBrush(gl, brush);
-            (entity.Shader as TerrainShader).LoadTerrainTextures(gl);
-            entity.Shader.LoadLight(gl, entity.Light);
+            terrain.LoadShaderVariables();
 
-            mat4 transformationMatrix = MatrixMath.CreateTransformationMatrix(new vec3(0, 0, 0), 0, 0, 0, 1);
-            entity.Shader.LoadTransformationMatrix(gl, transformationMatrix);
+            mat4 transformationMatrix = TerrainEngineMath.CreateTransformationMatrix(new vec3(0, 0, 0), new vec3(0, 0, 0), 1);
+            terrain.SetTransformationMatrix(transformationMatrix);
 
-            BindTerrainTexturePack(gl, entity.TerrainTextures);
-            gl.DrawElements(OpenGL.GL_TRIANGLES, entity.Model.Indices.Length, entity.Model.Indices);
+            BindTerrainTexturePack(gl, terrain.Textures);
+            gl.DrawElements(_renderType, terrain.Indices.Length, terrain.Indices);
             gl.DisableVertexAttribArray(0);
             gl.DisableVertexAttribArray(1);
             gl.DisableVertexAttribArray(2);
             gl.BindVertexArray(0);
 
-            entity.Shader.Stop(gl);
+            terrain.StopShader();
         }
 
-        private void BindTerrainTexturePack(OpenGL gl, TerrainTexturePack terrainTexturePack)
+        private void BindTerrainTexturePack(OpenGL gl, ModelTexture[] terrainTexturePack)
         {
             gl.ActiveTexture(OpenGL.GL_TEXTURE0);
-            gl.BindTexture(OpenGL.GL_TEXTURE_2D, terrainTexturePack.BackgroundTexture.Id);
+            gl.BindTexture(OpenGL.GL_TEXTURE_2D, terrainTexturePack[0].Id);
             gl.ActiveTexture(OpenGL.GL_TEXTURE1);
-            gl.BindTexture(OpenGL.GL_TEXTURE_2D, terrainTexturePack.RTexture.Id);
+            gl.BindTexture(OpenGL.GL_TEXTURE_2D, terrainTexturePack[1].Id);
             gl.ActiveTexture(OpenGL.GL_TEXTURE2);
-            gl.BindTexture(OpenGL.GL_TEXTURE_2D, terrainTexturePack.GTexture.Id);
+            gl.BindTexture(OpenGL.GL_TEXTURE_2D, terrainTexturePack[2].Id);
             gl.ActiveTexture(OpenGL.GL_TEXTURE3);
-            gl.BindTexture(OpenGL.GL_TEXTURE_2D, terrainTexturePack.BTexture.Id);
+            gl.BindTexture(OpenGL.GL_TEXTURE_2D, terrainTexturePack[3].Id);
             gl.ActiveTexture(OpenGL.GL_TEXTURE4);
-            gl.BindTexture(OpenGL.GL_TEXTURE_2D, terrainTexturePack.BlendMap.Id);
+            gl.BindTexture(OpenGL.GL_TEXTURE_2D, terrainTexturePack[4].Id);
         }
 
-        public void SetProjectionMatrix(OpenGL gl, ModelShader shader)
+        public void SetProjectionMatrix(OpenGL gl, BaseShader shader)
         {
-
-            shader.Start(gl);
-            shader.LoadProjectionMatrix(gl, _projectionMatrix);
-            shader.Stop(gl);
+            shader.Start();
+            shader.LoadProjectionMatrix(_projectionMatrix);
+            shader.Stop();
         }
 
-        public void SetViewMatrix(OpenGL gl, ModelShader shader, Camera camera)
+        public void SetViewMatrix(OpenGL gl, BaseShader shader, Camera camera)
         {
-            shader.Start(gl);
-            shader.LoadViewMatrix(gl, MatrixMath.CreateViewMatrix(camera));
-            shader.Stop(gl);
+            shader.Start();
+            shader.LoadViewMatrix(TerrainEngineMath.CreateViewMatrix(camera));
+            shader.Stop();
         }
 
 

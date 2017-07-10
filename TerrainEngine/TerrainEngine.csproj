@@ -66,6 +66,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="control\ModelControl.cs" />
+    <Compile Include="control\TerrainControl.cs" />
     <Compile Include="Properties\entities\Camera.cs" />
     <Compile Include="Properties\entities\Light.cs" />
     <Compile Include="FTerrainEngine.cs">
@@ -74,14 +76,13 @@
     <Compile Include="FTerrainEngine.Designer.cs">
       <DependentUpon>FTerrainEngine.cs</DependentUpon>
     </Compile>
-    <Compile Include="models\TerrainBrush.cs" />
-    <Compile Include="models\Model.cs" />
-    <Compile Include="models\Object3D.cs" />
-    <Compile Include="models\ModelShader.cs" />
-    <Compile Include="models\ModelTexture.cs" />
-    <Compile Include="models\Terrain.cs" />
-    <Compile Include="models\TerrainShader.cs" />
-    <Compile Include="models\TerrainTexturePack.cs" />
+    <Compile Include="entities\TerrainBrush.cs" />
+    <Compile Include="entities\Model.cs" />
+    <Compile Include="shaders\objects\BaseShader.cs" />
+    <Compile Include="entities\ModelTexture.cs" />
+    <Compile Include="entities\Terrain.cs" />
+    <Compile Include="shaders\objects\ModelShader.cs" />
+    <Compile Include="shaders\objects\TerrainShader.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="renderEngine\Loader.cs" />
@@ -98,7 +99,7 @@
     </Compile>
     <Compile Include="shaders\ShaderProgram.cs" />
     <Compile Include="tool\ManifestResourceLoader.cs" />
-    <Compile Include="tool\MatrixMath.cs" />
+    <Compile Include="tool\TerrainEngineMath.cs" />
     <Compile Include="tool\MousePicker.cs" />
     <EmbeddedResource Include="FTerrainEngine.resx">
       <DependentUpon>FTerrainEngine.cs</DependentUpon>
@@ -120,6 +121,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Textures.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="ClassDiagram1.cd" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

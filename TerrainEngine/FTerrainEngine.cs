@@ -11,10 +11,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TerrainEngine.entities;
-using TerrainEngine.models;
 using TerrainEngine.renderEngine;
 using TerrainEngine.tool;
-
+using TerrainEngine.control;
 
 namespace TerrainEngine
 {
@@ -30,8 +29,9 @@ namespace TerrainEngine
         private Camera _camera;
         private TerrainBrush _brush;
         private MousePicker _picker;
-        private List<Object3D> _objects3D = new List<Object3D>();
+        private List<Model> _objects3D = new List<Model>();
         private Terrain _terrain;
+        private TerrainControl _terrainControl;
         private float _brushRadius = 1.0f;
 
         public FTerrainEngine()
@@ -69,19 +69,33 @@ namespace TerrainEngine
             _renderer = new Renderer(45f, 0.1f, 1000f, glControl.Width, glControl.Height);
             _camera = new Camera();
             _baseLight = new Light(new vec3(0, 50, 0), new vec3(1, 1, 1));
+
+            Image[] textures =
+                {   Resources.Textures.ground,
+                    Resources.Textures.dark_stones,
+                    Resources.Textures.grass,
+                    Resources.Textures.stone_wall,
+                    Resources.Textures.blendMap
+                };
+
+            _brush = new TerrainBrush();
+
+            _terrainControl = new TerrainControl(_gl, _loader);
+            _terrain = _terrainControl.CreateTerrain(_gl, 200, 64, 0, 0, textures, new Light[] { _baseLight },
+                Resources.Shaders.terrainVertexShader, Resources.Shaders.terrainFragmentShader, _brush);
+
+
+            //_terrain = new Terrain(_gl, _loader, _baseLight, Resources.Textures.blendMap,
+            //                            Resources.Textures.ground, Resources.Textures.dark_stones, 
+            //                            Resources.Textures.grass, Resources.Textures.stone_wall,
+            //                            Resources.Shaders.terrainVertexShader,
+            //                            Resources.Shaders.terrainFragmentShader,
+            //                            1, 0, 0);
+            //_terrain.CreateTerrain(200);
+
+
+            _picker = new MousePicker(_terrain, _terrainControl, _camera, _renderer.ProjectionMatrix);
             
-
-            _terrain = new Terrain(_gl, _loader, _baseLight, Resources.Textures.blendMap,
-                                        Resources.Textures.ground, Resources.Textures.dark_stones, 
-                                        Resources.Textures.grass, Resources.Textures.stone_wall,
-                                        Resources.Shaders.terrainVertexShader,
-                                        Resources.Shaders.terrainFragmentShader,
-                                        1, 0, 0);
-            _terrain.CreateTerrain(200);
-
-
-            _picker = new MousePicker(_terrain, _camera, _renderer.ProjectionMatrix);
-            _brush = new TerrainBrush(_terrain);
 
             AddObject3D();
         }
@@ -131,7 +145,7 @@ namespace TerrainEngine
                 Image image = Image.FromFile(path);
                 return image;
             }
-            catch(IOException e)
+            catch (IOException e)
             {
                 MessageBox.Show(e.Message);
                 return null;
@@ -195,8 +209,9 @@ namespace TerrainEngine
 
             if (e.Button == MouseButtons.Left)
             {
-                _brush.ChangeTerrainBlendMap();
-                
+                //_brush.ChangeTerrainBlendMap();
+
+                _terrainControl.ChangeTerrainHeight(_terrain, 0.05f);
                 //_brush.ChangeTerrainHeight(0.05f);
 
                 //for (int i = 0; i < _picker.CurTerrainPoint.to_array().Length; i++)
@@ -205,13 +220,13 @@ namespace TerrainEngine
                 //}
                 //Console.WriteLine();
             }
-                
+
 
         }
 
         private void glControl_MouseUp(object sender, MouseEventArgs e)
         {
-            if(e.Button == MouseButtons.Right)
+            if (e.Button == MouseButtons.Right)
             {
                 _isMouseDown = false;
             }
@@ -220,7 +235,7 @@ namespace TerrainEngine
 
         private void glControl_KeyDown(object sender, KeyEventArgs e)
         {
-            if(e.KeyCode == Keys.W)
+            if (e.KeyCode == Keys.W)
             {
                 _camera.MoveForward();
             }
@@ -245,17 +260,18 @@ namespace TerrainEngine
 
         private void glControl_MouseWheel(object sender, MouseEventArgs e)
         {
-            if(e.Delta > 0)
+            if (e.Delta > 0)
             {
                 _camera.DecreaceDistance();
             }
-            else {
+            else
+            {
                 _camera.IncreaceDistance();
             }
-            
+
         }
 
-        
+
 
         private void trackBarBrushSize_Scroll(object sender, EventArgs e)
         {

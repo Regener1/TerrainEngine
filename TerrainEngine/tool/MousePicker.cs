@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TerrainEngine.control;
 using TerrainEngine.entities;
-using TerrainEngine.models;
 
 namespace TerrainEngine.tool
 {
@@ -19,12 +19,14 @@ namespace TerrainEngine.tool
         private mat4 _projectionMatrix;
         private Camera _camera;
         private Terrain _terrain;
+        private TerrainControl _terrainControl;
 
-        public MousePicker(Terrain terrain, Camera camera, mat4 projection)
+        public MousePicker(Terrain terrain, TerrainControl _terrainControl, Camera camera, mat4 projection)
         {
             this._terrain = terrain;
             this._camera = camera;
             this._projectionMatrix = projection;
+            this._terrainControl = _terrainControl;
         }
 
         public vec3 CurRay { get { return _curRay; } }
@@ -55,7 +57,7 @@ namespace TerrainEngine.tool
 
         private vec3 ToWorldCoords(vec4 eyeCoords)
         {
-            mat4 invertedView = glm.inverse(MatrixMath.CreateViewMatrix(_camera));
+            mat4 invertedView = glm.inverse(TerrainEngineMath.CreateViewMatrix(_camera));
             vec4 rayWorld = invertedView * eyeCoords;
             vec3 mouseRay = new vec3(rayWorld.x, rayWorld.y, rayWorld.z);
             mouseRay = glm.normalize(mouseRay);
@@ -134,7 +136,7 @@ namespace TerrainEngine.tool
             float height = 0;
             if (_terrain != null)
             {
-                height = _terrain.GetHeightOfTerrain(testPoint.x, testPoint.z);
+                height = _terrainControl.GetHeightOfTerrain(_terrain, testPoint.x, testPoint.z);
             }
             if (testPoint.y < height)
             {
@@ -148,7 +150,7 @@ namespace TerrainEngine.tool
 
         private vec3 GetTerrainHeight(float x, float z)
         {
-            float height = _terrain.GetHeightOfTerrain(x, z);
+            float height = _terrainControl.GetHeightOfTerrain(_terrain, x, z);
             return new vec3(x, height, z);
         }
     }
