@@ -137,12 +137,6 @@ namespace TerrainEngine.control
 
 
             return terrain;
-            //_model = new Model();
-            //_loader.LoadEntityToVao(_gl, _model, _vertices, _textureCoords, _indices, _normals);
-            //_terrainTextures = new TerrainTexturePack();
-            //_loader.LoadTerrainTexturePack(_gl, _terrainTextures, _blendMap, _backgroundTexture,
-            //                            _rTexture, _gTexture, _bTexture);
-            //_shader = _loader.LoadTerrainShader(_gl, _vertShaderCode, _fragShaderCode);
         }
 
         private TerrainData CreateData(int n, float terrainSize, float posX, float posZ)
@@ -220,13 +214,13 @@ namespace TerrainEngine.control
 
             if (xCoord <= (1 - zCoord))
             {
-                answer = TerrainEngineMath.barryCentric(new vec3(0, terrain.VerticesMap[gridX, gridZ].y, 0), new vec3(1,
+                answer = TerrainEngineMath.BarryCentric(new vec3(0, terrain.VerticesMap[gridX, gridZ].y, 0), new vec3(1,
                                 terrain.VerticesMap[gridX + 1, gridZ].y, 0), new vec3(0,
                                 terrain.VerticesMap[gridX, gridZ + 1].y, 1), new vec2(xCoord, zCoord));
             }
             else
             {
-                answer = TerrainEngineMath.barryCentric(new vec3(1, terrain.VerticesMap[gridX + 1, gridZ].y, 0), new vec3(1,
+                answer = TerrainEngineMath.BarryCentric(new vec3(1, terrain.VerticesMap[gridX + 1, gridZ].y, 0), new vec3(1,
                                 terrain.VerticesMap[gridX + 1, gridZ + 1].y, 1), new vec3(0,
                                 terrain.VerticesMap[gridX, gridZ + 1].y, 1), new vec2(xCoord, zCoord));
             }
@@ -272,7 +266,7 @@ namespace TerrainEngine.control
                         terrain.VerticesMap[i, j].y += amount;
                         terrain.Vertices[curIndex + 1] = terrain.VerticesMap[i, j].y;
 
-                        terrain.NormalsMap[i, j] = TerrainEngineMath.GetAverageVector(terrain.VerticesMap[i, j],
+                        terrain.NormalsMap[i, j] = TerrainEngineMath.GetAverageVector(terrain.NormalsMap[i, j],
                             TerrainEngineMath.GetNormal(terrain.VerticesMap[i, j], terrain.VerticesMap[i, j + 1], terrain.VerticesMap[i + 1, j]));
 
                         terrain.Normals[curIndex] = terrain.NormalsMap[i, j].x;

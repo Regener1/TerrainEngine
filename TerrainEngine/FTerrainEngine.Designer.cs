@@ -79,7 +79,7 @@
             this.glControl.OpenGLVersion = SharpGL.Version.OpenGLVersion.OpenGL4_2;
             this.glControl.RenderContextType = SharpGL.RenderContextType.NativeWindow;
             this.glControl.RenderTrigger = SharpGL.RenderTrigger.TimerBased;
-            this.glControl.Size = new System.Drawing.Size(1030, 660);
+            this.glControl.Size = new System.Drawing.Size(582, 369);
             this.glControl.TabIndex = 0;
             this.glControl.OpenGLInitialized += new System.EventHandler(this.glControl_OpenGLInitialized);
             this.glControl.OpenGLDraw += new SharpGL.RenderEventHandler(this.glControl_OpenGLDraw);
@@ -94,7 +94,7 @@
             // 
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1357, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(909, 24);
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -108,9 +108,9 @@
             this.stLblCamPosY,
             this.toolStripStatusLabel5,
             this.stLblCamPosZ});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 690);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 399);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1357, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(909, 22);
             this.statusStrip1.TabIndex = 4;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -163,10 +163,10 @@
             this.tabControl1.Controls.Add(this.tabPageLight);
             this.tabControl1.Controls.Add(this.tabPageSceneInfo);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.tabControl1.Location = new System.Drawing.Point(1048, 24);
+            this.tabControl1.Location = new System.Drawing.Point(600, 24);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(309, 666);
+            this.tabControl1.Size = new System.Drawing.Size(309, 375);
             this.tabControl1.TabIndex = 5;
             // 
             // tabPageScene
@@ -175,7 +175,7 @@
             this.tabPageScene.Location = new System.Drawing.Point(4, 22);
             this.tabPageScene.Name = "tabPageScene";
             this.tabPageScene.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageScene.Size = new System.Drawing.Size(301, 640);
+            this.tabPageScene.Size = new System.Drawing.Size(301, 349);
             this.tabPageScene.TabIndex = 0;
             this.tabPageScene.Text = "Scene";
             this.tabPageScene.UseVisualStyleBackColor = true;
@@ -363,7 +363,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1357, 712);
+            this.ClientSize = new System.Drawing.Size(909, 421);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.glControl);

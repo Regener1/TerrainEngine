@@ -20,7 +20,7 @@ namespace TerrainEngine.tool
             return res;
         }
 
-        public static float barryCentric(vec3 p1, vec3 p2, vec3 p3, vec2 pos)
+        public static float BarryCentric(vec3 p1, vec3 p2, vec3 p3, vec2 pos)
         {
             float det = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
             float l1 = ((p2.z - p3.z) * (pos.x - p3.x) + (p3.x - p2.x) * (pos.y - p3.z)) / det;

@@ -255,6 +255,25 @@ namespace TerrainEngine
                 _camera.MoveRight();
             }
 
+            ///
+            if(e.KeyCode == Keys.J)
+            {
+                _camera.IncreaseAroundPoint(1);
+            }
+            if (e.KeyCode == Keys.L)
+            {
+                _camera.DecreaseAroundPoint(1);
+            }
+            if (e.KeyCode == Keys.I)
+            {
+                _camera.IncreasePitch(1);
+            }
+            if (e.KeyCode == Keys.K)
+            {
+                _camera.DecreasePitch(1);
+            }
+            ///
+
             ShowCamPosition();
         }
 

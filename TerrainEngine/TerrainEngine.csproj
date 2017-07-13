@@ -99,6 +99,7 @@
     </Compile>
     <Compile Include="shaders\ShaderProgram.cs" />
     <Compile Include="tool\ManifestResourceLoader.cs" />
+    <Compile Include="tool\ObjParser.cs" />
     <Compile Include="tool\TerrainEngineMath.cs" />
     <Compile Include="tool\MousePicker.cs" />
     <EmbeddedResource Include="FTerrainEngine.resx">
@@ -121,7 +122,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Textures.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="ClassDiagram1.cd" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
