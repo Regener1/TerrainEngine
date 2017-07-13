@@ -66,6 +66,18 @@ namespace TerrainEngine
         {
             _gl = glControl.OpenGL;
             _loader = new Loader();
+
+            ObjParser objParser = new ObjParser(_loader);
+            try
+            {
+                objParser.Parse("untitled.obj");
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show("Parser: " + ex.Message);
+            }
+
+
             _renderer = new Renderer(45f, 0.1f, 1000f, glControl.Width, glControl.Height);
             _camera = new Camera();
             _baseLight = new Light(new vec3(0, 50, 0), new vec3(1, 1, 1));
@@ -83,15 +95,6 @@ namespace TerrainEngine
             _terrainControl = new TerrainControl(_gl, _loader);
             _terrain = _terrainControl.CreateTerrain(_gl, 200, 64, 0, 0, textures, new Light[] { _baseLight },
                 Resources.Shaders.terrainVertexShader, Resources.Shaders.terrainFragmentShader, _brush);
-
-
-            //_terrain = new Terrain(_gl, _loader, _baseLight, Resources.Textures.blendMap,
-            //                            Resources.Textures.ground, Resources.Textures.dark_stones, 
-            //                            Resources.Textures.grass, Resources.Textures.stone_wall,
-            //                            Resources.Shaders.terrainVertexShader,
-            //                            Resources.Shaders.terrainFragmentShader,
-            //                            1, 0, 0);
-            //_terrain.CreateTerrain(200);
 
 
             _picker = new MousePicker(_terrain, _terrainControl, _camera, _renderer.ProjectionMatrix);

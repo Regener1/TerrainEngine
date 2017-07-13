@@ -37,18 +37,23 @@ namespace TerrainEngine.tool
                 throw e;
             }
 
+            objCode = objCode.Replace('.', ',');
+
             Console.WriteLine(objCode);
 
             List<float> vertices = new List<float>();
             List<uint> indices = new List<uint>();
-            List<float> uv = new List<float>();
-            List<float> normals = new List<float>();
+            float[] uv = null;
+            float[] normals = null;
 
-            string[] lines = objCode.Split(new string[] { Environment.NewLine },
-                StringSplitOptions.RemoveEmptyEntries);
+            List<float> uvBase = new List<float>();
+            List<float> normalsBase = new List<float>();
+
+            string[] lines = objCode.Split('\n');
 
             string[] parseLine;
             string[] parseInds;
+            uint position = 0;
 
             try
             {
@@ -64,22 +69,34 @@ namespace TerrainEngine.tool
                     }
                     else if (parseLine[0].Equals("vn")) // normals
                     {
-                        normals.Add(float.Parse(parseLine[1]));
-                        normals.Add(float.Parse(parseLine[2]));
-                        normals.Add(float.Parse(parseLine[3]));
+                        normalsBase.Add(float.Parse(parseLine[1]));
+                        normalsBase.Add(float.Parse(parseLine[2]));
+                        normalsBase.Add(float.Parse(parseLine[3]));
 
                     }
                     else if (parseLine[0].Equals("vt")) // uv
                     {
-                        uv.Add(float.Parse(parseLine[1]));
-                        uv.Add(float.Parse(parseLine[2]));
+                        uvBase.Add(float.Parse(parseLine[1]));
+                        uvBase.Add(float.Parse(parseLine[2]));
                     }
-                    else if (parseLine[0].Equals("f")) // 
+                    else if (parseLine[0].Equals("f")) // v/vt/n
                     {
+                        if (uv == null && normals == null)
+                        {
+                            uv = new float[(vertices.Count / 3) * 2]; // /3*2
+                            normals = new float[vertices.Count];
+                        }
+
                         for(int j = 1; j < parseLine.Length; j++)
                         {
                             parseInds = parseLine[j].Split('/');
-                            indices.Add(uint.Parse(parseInds[0]));
+
+                            position = uint.Parse(parseInds[0]);
+                            indices.Add(position);
+
+                            normals[(position - 1) * 3] = normalsBase[(int.Parse(parseInds[2]) - 1) * 3];
+                            normals[(position - 1) * 3 + 1] = normalsBase[(int.Parse(parseInds[2]) - 1) * 3 + 1];
+                            normals[(position - 1) * 3 + 2] = normalsBase[(int.Parse(parseInds[2]) - 1) * 3 + 2];
                         }
                     }
                 }
